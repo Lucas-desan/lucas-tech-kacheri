@@ -80,7 +80,7 @@
   </script>
 
   <script type="text/babel">
-    const { useState, useEffect } = React;
+    const { useState } = React;
 
     // --- LTK EMBLEM LOGO COMPONENT ---
     const LTKLogo = ({ className = "w-12 h-12" }) => (
@@ -288,10 +288,84 @@
       '02:00 PM', '03:30 PM', '05:00 PM'
     ];
 
+    const BOOKING_API_URL = '/api/bookings';
+
+    const bookingApiRequest = async (path = '', options = {}) => {
+      let response;
+      try {
+        response = await fetch(`${BOOKING_API_URL}${path}`, {
+          ...options,
+          headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+          }
+        });
+      } catch (error) {
+        console.error('Unable to reach the booking API', error);
+        throw new Error('Cannot reach the booking service. Open the deployed Netlify site and make sure its booking function is deployed.');
+      }
+
+      let result;
+      try {
+        result = await response.json();
+      } catch {
+        if (response.status === 404) {
+          throw new Error('The booking API was not found. Deploy the site with its Netlify booking function.');
+        }
+        throw new Error('The booking service returned an invalid response.');
+      }
+
+      if (!response.ok) {
+        throw new Error(result.error || 'The booking service could not complete the request.');
+      }
+
+      return result;
+    };
+
+    const isBookingRecord = (booking) => Boolean(
+      booking &&
+      typeof booking.id === 'string' &&
+      typeof booking.customer?.name === 'string' &&
+      typeof booking.customer?.phone === 'string' &&
+      typeof booking.service?.name === 'string' &&
+      typeof booking.service?.category === 'string' &&
+      Number.isFinite(booking.service?.price)
+    );
+
+    const LTKIcon = ({ name, className = '' }) => {
+      const iconName = name.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('');
+      const iconParts = window.lucide?.[iconName];
+
+      if (!iconParts) {
+        console.error(`Unknown Lucide icon: ${name}`);
+        return null;
+      }
+
+      return (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={className}
+          aria-hidden="true"
+        >
+          {iconParts.map(([element, attributes], index) => React.createElement(element, { key: index, ...attributes }))}
+        </svg>
+      );
+    };
+
     function App() {
       const [activeTab, setActiveTab] = useState('book'); // 'book' | 'dashboard' | 'contact'
       const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
       const [adminPin, setAdminPin] = useState('');
+      const [adminAuthPin, setAdminAuthPin] = useState('');
+      const [isUnlockingAdmin, setIsUnlockingAdmin] = useState(false);
       const [adminPinError, setAdminPinError] = useState('');
       const [categoryFilter, setCategoryFilter] = useState('All');
       const [selectedService, setSelectedService] = useState(SERVICES[0]);
@@ -321,76 +395,12 @@
       const [searchQuery, setSearchQuery] = useState('');
       const [selectedBookingModal, setSelectedBookingModal] = useState(null);
 
-      // Initialize stored data
-      useEffect(() => {
-        try {
-          const saved = window.localStorage.getItem('ltk_bookings_data');
-          if (saved) {
-            const parsedBookings = JSON.parse(saved);
-            if (!Array.isArray(parsedBookings)) {
-              throw new TypeError('Saved bookings must be an array.');
-            }
-            if (parsedBookings.some(booking =>
-              !booking ||
-              typeof booking.id !== 'string' ||
-              typeof booking.customer?.name !== 'string' ||
-              typeof booking.service?.name !== 'string'
-            )) {
-              throw new TypeError('Saved booking data is incomplete.');
-            }
-            setBookings(parsedBookings);
-            return;
-          }
-
-          // Demo Booking
-          const demo = [
-            {
-              id: 'LTK-8821',
-              service: SERVICES[0],
-              date: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0],
-              time: '10:00 AM',
-              meetingType: 'On-site Kacheri Office',
-              customer: {
-                name: 'Emmanuel Lopuke',
-                email: 'e.lopuke@kacheri.org',
-                phone: '+256 782 999 111',
-                location: 'Kacheri Sub-County HQ',
-                notes: 'Need website redesign for local community initiative.'
-              },
-              status: 'Confirmed',
-              createdAt: new Date().toISOString()
-            }
-          ];
-          saveBookingsList(demo);
-        } catch (error) {
-          console.error('Unable to load saved bookings', error);
-          setStorageError('Saved bookings could not be loaded from this browser.');
-        }
-      }, []);
-
-      useEffect(() => {
-        if (window.lucide) {
-          window.lucide.createIcons();
-        }
-      });
-
-      const saveBookingsList = (newBookings) => {
-        setBookings(newBookings);
-        try {
-          window.localStorage.setItem('ltk_bookings_data', JSON.stringify(newBookings));
-          setStorageError('');
-        } catch (error) {
-          console.error('Unable to save bookings to this browser', error);
-          setStorageError('Bookings are available in this session, but could not be saved in this browser.');
-        }
-      };
-
       const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
       };
 
-      const handleFormSubmit = (e) => {
+      const handleFormSubmit = async (e) => {
         e.preventDefault();
         if (!formData.name || !formData.phone) {
           alert('Please provide your name and WhatsApp/Phone number.');
@@ -398,23 +408,25 @@
         }
 
         setIsSubmitting(true);
+        setStorageError('');
 
-        setTimeout(() => {
-          const newBooking = {
-            id: `LTK-${Math.floor(1000 + Math.random() * 9000)}`,
-            service: selectedService,
-            date: selectedDate,
-            time: selectedTime,
-            meetingType,
-            customer: { ...formData },
-            status: 'Confirmed',
-            createdAt: new Date().toISOString()
-          };
+        try {
+          const result = await bookingApiRequest('', {
+            method: 'POST',
+            body: JSON.stringify({
+              service: selectedService,
+              date: selectedDate,
+              time: selectedTime,
+              meetingType,
+              customer: { ...formData }
+            })
+          });
+          if (!isBookingRecord(result?.booking)) {
+            throw new Error('The booking was not confirmed because the server returned incomplete booking details. Please try again or contact support.');
+          }
 
-          const updated = [newBooking, ...bookings];
-          saveBookingsList(updated);
-          setBookingSuccess(newBooking);
-          setIsSubmitting(false);
+          setBookings(previous => [result.booking, ...previous.filter(isBookingRecord)]);
+          setBookingSuccess(result.booking);
 
           setFormData({
             name: '',
@@ -423,35 +435,72 @@
             location: 'Kacheri Town Center',
             notes: ''
           });
-        }, 900);
-      };
-
-      const handleCancelBooking = (id) => {
-        const updated = bookings.map(b => b.id === id ? { ...b, status: 'Cancelled' } : b);
-        saveBookingsList(updated);
-        if (selectedBookingModal?.id === id) {
-          setSelectedBookingModal(prev => ({ ...prev, status: 'Cancelled' }));
+        } catch (error) {
+          console.error('Unable to submit booking', error);
+          setStorageError(error.message);
+        } finally {
+          setIsSubmitting(false);
         }
       };
 
-      const handleDeleteBooking = (id) => {
-        const updated = bookings.filter(b => b.id !== id);
-        saveBookingsList(updated);
-        if (selectedBookingModal?.id === id) {
-          setSelectedBookingModal(null);
+      const handleCancelBooking = async (id) => {
+        try {
+          const { booking } = await bookingApiRequest(`/${encodeURIComponent(id)}`, {
+            method: 'PATCH',
+            headers: { 'x-admin-pin': adminAuthPin },
+            body: JSON.stringify({ status: 'Cancelled' })
+          });
+          setBookings(previous => previous.map(item => item.id === id ? booking : item));
+          if (selectedBookingModal?.id === id) {
+            setSelectedBookingModal(booking);
+          }
+          setStorageError('');
+        } catch (error) {
+          console.error('Unable to cancel booking', error);
+          setStorageError(error.message);
         }
       };
 
-      const handleAdminUnlock = (e) => {
+      const handleDeleteBooking = async (id) => {
+        try {
+          await bookingApiRequest(`/${encodeURIComponent(id)}`, {
+            method: 'DELETE',
+            headers: { 'x-admin-pin': adminAuthPin }
+          });
+          setBookings(previous => previous.filter(item => item.id !== id));
+          if (selectedBookingModal?.id === id) {
+            setSelectedBookingModal(null);
+          }
+          setStorageError('');
+        } catch (error) {
+          console.error('Unable to delete booking', error);
+          setStorageError(error.message);
+        }
+      };
+
+      const handleAdminUnlock = async (e) => {
         e.preventDefault();
-        if (adminPin === '18102001') {
+        setIsUnlockingAdmin(true);
+
+        try {
+          const result = await bookingApiRequest('', {
+            headers: { 'x-admin-pin': adminPin }
+          });
+          if (!Array.isArray(result?.bookings) || !result.bookings.every(isBookingRecord)) {
+            throw new Error('The booking service returned an invalid bookings list.');
+          }
+          setBookings(result.bookings);
+          setAdminAuthPin(adminPin);
           setIsAdminUnlocked(true);
           setAdminPin('');
           setAdminPinError('');
-          return;
+          setStorageError('');
+        } catch (error) {
+          console.error('Unable to unlock the admin dashboard', error);
+          setAdminPinError(error.message);
+        } finally {
+          setIsUnlockingAdmin(false);
         }
-
-        setAdminPinError('Incorrect PIN. Please try again.');
       };
 
       // Filtered Services for Booking
@@ -462,6 +511,9 @@
 
       // Filtered Bookings for Dashboard
       const filteredBookings = bookings.filter(b => {
+        if (!isBookingRecord(b)) {
+          return false;
+        }
         const matchesSearch = b.customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                               b.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
                               b.service.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -504,7 +556,7 @@
                       : 'text-slate-400 hover:text-white hover:bg-slate-800'
                   }`}
                 >
-                  <i data-lucide="calendar" className="w-4 h-4"></i>
+                  <LTKIcon name="calendar" className="w-4 h-4" />
                   <span>Book Service</span>
                 </button>
 
@@ -516,7 +568,7 @@
                       : 'text-slate-400 hover:text-white hover:bg-slate-800'
                   }`}
                 >
-                  <i data-lucide="shield-check" className="w-4 h-4"></i>
+                  <LTKIcon name="shield-check" className="w-4 h-4" />
                   <span>Admin Dashboard</span>
                   {bookings.length > 0 && (
                     <span className="ml-1 px-2 py-0.5 text-[10px] bg-slate-950/60 rounded-full text-amber-400 border border-amber-500/30">
@@ -533,7 +585,7 @@
                       : 'text-slate-400 hover:text-white hover:bg-slate-800'
                   }`}
                 >
-                  <i data-lucide="map-pin" className="w-4 h-4"></i>
+                  <LTKIcon name="map-pin" className="w-4 h-4" />
                   <span className="hidden sm:inline">Location</span>
                 </button>
               </nav>
@@ -558,7 +610,7 @@
                   <span className="text-sm font-extrabold text-amber-400">+256770865675</span>
                 </div>
                 <div className="w-10 h-10 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center">
-                  <i data-lucide="phone-call" className="w-5 h-5"></i>
+                  <LTKIcon name="phone-call" className="w-5 h-5" />
                 </div>
               </div>
             </div>
@@ -579,7 +631,7 @@
                   /* Confirmation Modal / Card */
                   <div className="max-w-2xl mx-auto bg-[#162436] border border-amber-500/40 rounded-3xl p-8 shadow-2xl text-center backdrop-blur-md">
                     <div className="w-20 h-20 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/40">
-                      <i data-lucide="check-circle-2" className="w-12 h-12"></i>
+                      <LTKIcon name="check-circle-2" className="w-12 h-12" />
                     </div>
                     <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-2">
                       Booking Reserved Successfully!
@@ -698,7 +750,7 @@
                                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${
                                     isSelected ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-amber-400'
                                   }`}>
-                                    <i data-lucide={srv.iconName} className="w-5 h-5"></i>
+                                    <LTKIcon name={srv.iconName} className="w-5 h-5" />
                                   </div>
                                   <h4 className="font-bold text-white text-base mb-1">{srv.name}</h4>
                                   <p className="text-xs text-slate-400 leading-relaxed mb-4">{srv.description}</p>
@@ -917,7 +969,7 @@
                           ) : (
                             <>
                               <span>Submit & Reserve Booking</span>
-                              <i data-lucide="arrow-right" className="w-4 h-4"></i>
+                              <LTKIcon name="arrow-right" className="w-4 h-4" />
                             </>
                           )}
                         </button>
@@ -939,7 +991,7 @@
                 <div className="max-w-md mx-auto bg-[#162436] border border-slate-800 rounded-3xl p-8 shadow-2xl">
                   <div className="text-center mb-6">
                     <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center justify-center">
-                      <i data-lucide="lock-keyhole" className="w-7 h-7"></i>
+                      <LTKIcon name="lock-keyhole" className="w-7 h-7" />
                     </div>
                     <h3 className="text-xl font-extrabold text-white">Admin Dashboard</h3>
                     <p className="text-sm text-slate-400 mt-2">Enter the admin PIN to manage bookings.</p>
@@ -953,7 +1005,6 @@
                         type="password"
                         inputMode="numeric"
                         autoComplete="off"
-                        maxLength="8"
                         value={adminPin}
                         onChange={(e) => { setAdminPin(e.target.value); setAdminPinError(''); }}
                         aria-describedby={adminPinError ? 'admin-pin-error' : undefined}
@@ -967,9 +1018,10 @@
                     </div>
                     <button
                       type="submit"
-                      className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl transition"
+                      disabled={isUnlockingAdmin}
+                      className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl transition disabled:opacity-50"
                     >
-                      Unlock Dashboard
+                      {isUnlockingAdmin ? 'Checking PIN...' : 'Unlock Dashboard'}
                     </button>
                   </form>
                 </div>
@@ -994,7 +1046,7 @@
 
                   {filteredBookings.length === 0 ? (
                     <div className="bg-[#162436] border border-slate-800 rounded-3xl p-12 text-center">
-                      <i data-lucide="calendar-x" className="w-12 h-12 text-slate-600 mx-auto mb-3"></i>
+                      <LTKIcon name="calendar-x" className="w-12 h-12 text-slate-600 mx-auto mb-3" />
                       <h4 className="text-base font-semibold text-slate-300">No Bookings Found</h4>
                       <p className="text-xs text-slate-500 mt-1 mb-4">No appointments matching your query.</p>
                       <button
@@ -1069,7 +1121,7 @@
                               onClick={() => handleDeleteBooking(b.id)}
                               className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 transition"
                             >
-                              <i data-lucide="trash-2" className="w-4 h-4"></i>
+                              <LTKIcon name="trash-2" className="w-4 h-4" />
                             </button>
                           </div>
                         </div>
@@ -1100,7 +1152,7 @@
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="bg-[#0B192C] p-5 rounded-2xl border border-slate-800 text-center">
                       <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-3">
-                        <i data-lucide="map-pin" className="w-5 h-5"></i>
+                        <LTKIcon name="map-pin" className="w-5 h-5" />
                       </div>
                       <h4 className="font-bold text-white text-sm mb-1">Physical Location</h4>
                       <p className="text-xs text-slate-400">
@@ -1110,7 +1162,7 @@
 
                     <div className="bg-[#0B192C] p-5 rounded-2xl border border-slate-800 text-center">
                       <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-3">
-                        <i data-lucide="phone" className="w-5 h-5"></i>
+                        <LTKIcon name="phone" className="w-5 h-5" />
                       </div>
                       <h4 className="font-bold text-white text-sm mb-1">Phone & WhatsApp</h4>
                       <p className="text-xs text-slate-400">+256 700 000 000</p>
@@ -1119,7 +1171,7 @@
 
                     <div className="bg-[#0B192C] p-5 rounded-2xl border border-slate-800 text-center">
                       <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-3">
-                        <i data-lucide="mail" className="w-5 h-5"></i>
+                        <LTKIcon name="mail" className="w-5 h-5" />
                       </div>
                       <h4 className="font-bold text-white text-sm mb-1">Email Support</h4>
                       <p className="text-xs text-slate-400">support@lucastech-kacheri.com</p>
@@ -1140,7 +1192,7 @@
                   onClick={() => setSelectedBookingModal(null)}
                   className="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-xl bg-slate-800"
                 >
-                  <i data-lucide="x" className="w-4 h-4"></i>
+                  <LTKIcon name="x" className="w-4 h-4" />
                 </button>
 
                 <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2">

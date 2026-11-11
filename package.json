@@ -13,5 +13,8 @@
     "Booking"
   ],
   "author": "Lucas",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@netlify/blobs": "^11.1.9"
+  }
 }
