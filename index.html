@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lucas Technologies Kacheri (LTK) - Booking Application</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            ltk: {
+              blue: '#0B192C',
+              navy: '#1E3E62',
+              accent: '#008DDA',
+              gold: '#E5A93B',
+              goldHover: '#D4982A',
+              card: '#162436'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- React & React DOM Babel CDN -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #070F1E;
+      color: #F1F5F9;
+    }
+    .gold-gradient-text {
+      background: linear-gradient(135deg, #FDE68A 0%, #E5A93B 50%, #B45309 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .gold-border {
+      border-image: linear-gradient(135deg, #FDE68A, #E5A93B, #B45309) 1;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #0B192C;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #1E3E62;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-amber-500 selection:text-slate-950">
+
+  <div id="root"></div>
+
+  <script>
+    window.firebaseConfig = {
+      apiKey: "AIzaSyBRREnrBY4M1NVSDofHqqB02Ewl1T3pD9k",
+      authDomain: "lucas-tech-kacheri.firebaseapp.com",
+      projectId: "lucas-tech-kacheri",
+      storageBucket: "lucas-tech-kacheri.firebasestorage.app",
+      messagingSenderId: "509036347319",
+      appId: "1:509036347319:web:f620ff9b42eb333b987232",
+      measurementId: "G-YFSNERT5S1"
+    };
+  </script>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // --- LTK EMBLEM LOGO COMPONENT ---
+    const LTKLogo = ({ className = "w-12 h-12" }) => (
+      <svg viewBox="0 0 400 400" className={className} xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="blueGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#1E3E62" />
+            <stop offset="100%" stopColor="#0B192C" />
+          </radialGradient>
+          <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#FDE68A" />
+            <stop offset="50%" stopColor="#E5A93B" />
+            <stop offset="100%" stopColor="#92400E" />
+          </linearGradient>
+        </defs>
+
+        {/* Outer Gold Ring */}
+        <circle cx="200" cy="200" r="190" fill="none" stroke="url(#goldGradient)" strokeWidth="16" />
+        <circle cx="200" cy="200" r="178" fill="#F8FAFC" />
+        <circle cx="200" cy="200" r="132" fill="none" stroke="url(#goldGradient)" strokeWidth="6" />
+
+        {/* Inner Blue Circle */}
+        <circle cx="200" cy="200" r="126" fill="url(#blueGlow)" />
+
+        {/* Outer Curved Text (Lucas Technologies Kacheri) */}
+        <path id="textPathTop" d="M 50 200 A 150 150 0 0 1 350 200" fill="none" />
+        <text fontFamily="'Plus Jakarta Sans', sans-serif" fontSize="25" fontWeight="800" fill="#0F172A" textAnchor="middle">
+          <textPath href="#textPathTop" startOffset="50%">
+            Lucas Technologies Kacheri
+          </textPath>
+        </text>
+
+        {/* Bottom Text (LTK) */}
+        <text x="200" y="340" fontFamily="'Plus Jakarta Sans', sans-serif" fontSize="42" fontWeight="900" fill="#0F172A" textAnchor="middle" letterSpacing="4">
+          LTK
+        </text>
+
+        {/* Dots */}
+        <circle cx="65" cy="210" r="10" fill="#0F172A" />
+        <circle cx="335" cy="210" r="10" fill="#0F172A" />
+
+        {/* Central Microchip + Gear Gold Graphic */}
+        <g transform="translate(200, 200)">
+          {/* Gear teeth on right */}
+          <path d="M 25 -35 L 45 -25 L 40 -10 L 55 0 L 40 10 L 45 25 L 25 35 Z" fill="url(#goldGradient)" opacity="0.8" />
+          
+          {/* Circuit Lines */}
+          <g stroke="url(#goldGradient)" strokeWidth="4" strokeLinecap="round" fill="none">
+            <line x1="-30" y1="-50" x2="-30" y2="-25" />
+            <circle cx="-30" cy="-55" r="5" fill="url(#goldGradient)" />
+            <line x1="0" y1="-60" x2="0" y2="-25" />
+            <circle cx="0" cy="-65" r="5" fill="url(#goldGradient)" />
+            <line x1="30" y1="-50" x2="30" y2="-25" />
+            <circle cx="30" cy="-55" r="5" fill="url(#goldGradient)" />
+
+            <line x1="-30" y1="50" x2="-30" y2="25" />
+            <circle cx="-30" cy="55" r="5" fill="url(#goldGradient)" />
+            <line x1="0" y1="60" x2="0" y2="25" />
+            <circle cx="0" cy="65" r="5" fill="url(#goldGradient)" />
+            <line x1="30" y1="50" x2="30" y2="25" />
+            <circle cx="30" cy="55" r="5" fill="url(#goldGradient)" />
+
+            <line x1="-50" y1="-30" x2="-25" y2="-30" />
+            <circle cx="-55" cy="-30" r="5" fill="url(#goldGradient)" />
+            <line x1="-60" y1="0" x2="-25" y2="0" />
+            <circle cx="-65" cy="0" r="5" fill="url(#goldGradient)" />
+            <line x1="-50" y1="30" x2="-25" y2="30" />
+            <circle cx="-55" cy="30" r="5" fill="url(#goldGradient)" />
+          </g>
+
+          {/* CPU Square Core */}
+          <rect x="-28" y="-28" width="56" height="56" rx="8" fill="url(#goldGradient)" />
+          <rect x="-22" y="-22" width="44" height="44" rx="5" fill="#0B192C" />
+          <rect x="-14" y="-14" width="28" height="28" rx="3" fill="url(#goldGradient)" />
+        </g>
+      </svg>
+    );
+
+    // --- SERVICE CATALOG DATA (BASED ON IMAGE 1) ---
+    const SERVICES = [
+      // 1. Software Solutions
+      {
+        id: 'web-design',
+        name: 'Professional Web Design',
+        category: 'Software Solutions',
+        iconName: 'code',
+        price: 350000,
+        duration: '3 - 5 Days',
+        description: 'Dynamic, responsive web experiences tailored for businesses, schools, and organizations.',
+        popular: true
+      },
+      {
+        id: 'mobile-dev',
+        name: 'Mobile App Development',
+        category: 'Software Solutions',
+        iconName: 'smartphone',
+        price: 600000,
+        duration: '1 - 2 Weeks',
+        description: 'Custom iOS & Android mobile applications with fast interfaces and offline capabilities.',
+        popular: true
+      },
+      {
+        id: 'custom-software',
+        name: 'Custom Software Platforms',
+        category: 'Software Solutions',
+        iconName: 'cpu',
+        price: 800000,
+        duration: '2 - 3 Weeks',
+        description: 'Besopke ERPs, point-of-sale systems, inventory, and school management software.',
+        popular: false
+      },
+      {
+        id: 'app-maintenance',
+        name: 'Site & App Maintenance',
+        category: 'Software Solutions',
+        iconName: 'wrench',
+        price: 150000,
+        duration: 'Ongoing Support',
+        description: 'Full-service updates, daily backups, code refactoring, and security patches.',
+        popular: false
+      },
+
+      // 2. IT & Digital Infrastructure
+      {
+        id: 'network-admin',
+        name: 'Network Administration',
+        category: 'IT & Infrastructure',
+        iconName: 'network',
+        price: 200000,
+        duration: '1 - 2 Days',
+        description: 'Router configuration, LAN/WLAN setup, bandwidth management, and firewall security.',
+        popular: true
+      },
+      {
+        id: 'db-admin',
+        name: 'Database Systems Administration',
+        category: 'IT & Infrastructure',
+        iconName: 'database',
+        price: 250000,
+        duration: '2 - 4 Days',
+        description: 'SQL/NoSQL database optimization, secure backups, data migration, and integrity audits.',
+        popular: false
+      },
+      {
+        id: 'business-email',
+        name: 'Branded Professional Business Email',
+        category: 'IT & Infrastructure',
+        iconName: 'mail',
+        price: 80000,
+        duration: 'Same Day (4 hrs)',
+        description: 'Domain-based emails (yourname@yourcompany.com) with spam protection and cloud sync.',
+        popular: true
+      },
+      {
+        id: 'digital-cards',
+        name: 'Digital Cards & Signatures',
+        category: 'IT & Infrastructure',
+        iconName: 'contact',
+        price: 50000,
+        duration: 'Same Day',
+        description: 'Interactive NFC & QR digital business cards and html email signature branding.',
+        popular: false
+      },
+      {
+        id: 'seo-optimization',
+        name: 'SEO Optimization & Ranking',
+        category: 'IT & Infrastructure',
+        iconName: 'trending-up',
+        price: 180000,
+        duration: '1 Week Audit',
+        description: 'Boost search rankings, keyword positioning, and organic web visibility in Karamoja & beyond.',
+        popular: true
+      },
+
+      // 3. Creative & Career Media
+      {
+        id: 'mobile-video',
+        name: 'High-Quality Mobile Videography',
+        category: 'Creative Media',
+        iconName: 'video',
+        price: 150000,
+        duration: '1 Day Shoot',
+        description: 'Event coverage, promotional reels, interview shoots, and 4K mobile video production.',
+        popular: true
+      },
+      {
+        id: 'photo-design',
+        name: 'Professional Photographic Design',
+        category: 'Creative Media',
+        iconName: 'camera',
+        price: 100000,
+        duration: '1 - 2 Days',
+        description: 'Studio portraits, product photography, image retouching, and graphic flyer design.',
+        popular: false
+      },
+      {
+        id: 'media-content',
+        name: 'Creative Media & Content Creation',
+        category: 'Creative Media',
+        iconName: 'palette',
+        price: 120000,
+        duration: '3 - 5 Days',
+        description: 'Social media management, brand banners, copy writing, and promotional content strategy.',
+        popular: false
+      },
+      {
+        id: 'maps-seo',
+        name: 'Google Maps SEO & Location Setup',
+        category: 'Creative Media',
+        iconName: 'map-pin',
+        price: 70000,
+        duration: '1 Day',
+        description: 'Optimize Google Map presence, pin verification, customer reviews, and local search performance.',
+        popular: true
+      },
+      {
+        id: 'speed-security',
+        name: 'Performance, Speed & Security Audit',
+        category: 'Creative Media',
+        iconName: 'shield-check',
+        price: 110000,
+        duration: '1 - 2 Days',
+        description: 'Web/App speed optimization, SSL certificate installation, and malware detection.',
+        popular: false
+      }
+    ];
+
+    const TIME_SLOTS = [
+      '08:30 AM', '10:00 AM', '11:30 AM', 
+      '02:00 PM', '03:30 PM', '05:00 PM'
+    ];
+
+    function App() {
+      const [activeTab, setActiveTab] = useState('book'); // 'book' | 'dashboard' | 'contact'
+      const [categoryFilter, setCategoryFilter] = useState('All');
+      const [selectedService, setSelectedService] = useState(SERVICES[0]);
+      
+      const [selectedDate, setSelectedDate] = useState(() => {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        return tomorrow.toISOString().split('T')[0];
+      });
+      const [selectedTime, setSelectedTime] = useState('10:00 AM');
+      const [meetingType, setMeetingType] = useState('On-site Kacheri Office');
+      
+      const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        phone: '',
+        location: 'Kacheri Town Center',
+        notes: ''
+      });
+
+      const [isSubmitting, setIsSubmitting] = useState(false);
+      const [bookingSuccess, setBookingSuccess] = useState(null);
+
+      // Bookings Management
+      const [bookings, setBookings] = useState([]);
+      const [searchQuery, setSearchQuery] = useState('');
+      const [selectedBookingModal, setSelectedBookingModal] = useState(null);
+
+      // Initialize stored data
+      useEffect(() => {
+        const saved = localStorage.getItem('ltk_bookings_data');
+        if (saved) {
+          try {
+            setBookings(JSON.parse(saved));
+          } catch (e) {
+            console.error("Error reading bookings", e);
+          }
+        } else {
+          // Demo Booking
+          const demo = [
+            {
+              id: 'LTK-8821',
+              service: SERVICES[0],
+              date: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0],
+              time: '10:00 AM',
+              meetingType: 'On-site Kacheri Office',
+              customer: {
+                name: 'Emmanuel Lopuke',
+                email: 'e.lopuke@kacheri.org',
+                phone: '+256 782 999 111',
+                location: 'Kacheri Sub-County HQ',
+                notes: 'Need website redesign for local community initiative.'
+              },
+              status: 'Confirmed',
+              createdAt: new Date().toISOString()
+            }
+          ];
+          setBookings(demo);
+          localStorage.setItem('ltk_bookings_data', JSON.stringify(demo));
+        }
+      }, []);
+
+      useEffect(() => {
+        if (window.lucide) {
+          window.lucide.createIcons();
+        }
+      });
+
+      const saveBookingsList = (newBookings) => {
+        setBookings(newBookings);
+        localStorage.setItem('ltk_bookings_data', JSON.stringify(newBookings));
+      };
+
+      const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+      };
+
+      const handleFormSubmit = (e) => {
+        e.preventDefault();
+        if (!formData.name || !formData.phone) {
+          alert('Please provide your name and WhatsApp/Phone number.');
+          return;
+        }
+
+        setIsSubmitting(true);
+
+        setTimeout(() => {
+          const newBooking = {
+            id: `LTK-${Math.floor(1000 + Math.random() * 9000)}`,
+            service: selectedService,
+            date: selectedDate,
+            time: selectedTime,
+            meetingType,
+            customer: { ...formData },
+            status: 'Confirmed',
+            createdAt: new Date().toISOString()
+          };
+
+          const updated = [newBooking, ...bookings];
+          saveBookingsList(updated);
+          setBookingSuccess(newBooking);
+          setIsSubmitting(false);
+
+          setFormData({
+            name: '',
+            email: '',
+            phone: '',
+            location: 'Kacheri Town Center',
+            notes: ''
+          });
+        }, 900);
+      };
+
+      const handleCancelBooking = (id) => {
+        const updated = bookings.map(b => b.id === id ? { ...b, status: 'Cancelled' } : b);
+        saveBookingsList(updated);
+        if (selectedBookingModal?.id === id) {
+          setSelectedBookingModal(prev => ({ ...prev, status: 'Cancelled' }));
+        }
+      };
+
+      const handleDeleteBooking = (id) => {
+        const updated = bookings.filter(b => b.id !== id);
+        saveBookingsList(updated);
+        if (selectedBookingModal?.id === id) {
+          setSelectedBookingModal(null);
+        }
+      };
+
+      // Filtered Services for Booking
+      const filteredServices = SERVICES.filter(s => {
+        if (categoryFilter === 'All') return true;
+        return s.category === categoryFilter;
+      });
+
+      // Filtered Bookings for Dashboard
+      const filteredBookings = bookings.filter(b => {
+        const matchesSearch = b.customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                              b.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                              b.service.name.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesSearch;
+      });
+
+      return (
+        <div className="min-h-screen flex flex-col bg-[#070F1E] text-slate-100">
+          
+          {/* HEADER BAR */}
+          <header className="sticky top-0 z-40 bg-[#0B192C]/90 backdrop-blur-md border-b border-slate-800 shadow-xl">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+              
+              {/* Brand Logo & Name */}
+              <div 
+                className="flex items-center space-x-3 cursor-pointer"
+                onClick={() => { setActiveTab('book'); setBookingSuccess(null); }}
+              >
+                <LTKLogo className="w-12 h-12 hover:scale-105 transition-transform" />
+                <div>
+                  <h1 className="text-xl font-extrabold tracking-tight gold-gradient-text flex items-center gap-2">
+                    Lucas Technologies
+                  </h1>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                      LTK KACHERI
+                    </span>
+                    <span className="text-xs text-slate-400 hidden sm:inline">Local & Global Growth</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Navigation Tabs */}
+              <nav className="flex space-x-1 sm:space-x-2 bg-slate-900/80 p-1.5 rounded-xl border border-slate-800">
+                <button
+                  onClick={() => { setActiveTab('book'); setBookingSuccess(null); }}
+                  className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center space-x-2 ${
+                    activeTab === 'book'
+                      ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  <i data-lucide="calendar" class="w-4 h-4"></i>
+                  <span>Book Service</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('dashboard')}
+                  className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center space-x-2 ${
+                    activeTab === 'dashboard'
+                      ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  <i data-lucide="clock" class="w-4 h-4"></i>
+                  <span>Manage</span>
+                  {bookings.length > 0 && (
+                    <span className="ml-1 px-2 py-0.5 text-[10px] bg-slate-950/60 rounded-full text-amber-400 border border-amber-500/30">
+                      {bookings.length}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('contact')}
+                  className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center space-x-2 ${
+                    activeTab === 'contact'
+                      ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  <i data-lucide="map-pin" class="w-4 h-4"></i>
+                  <span className="hidden sm:inline">Location</span>
+                </button>
+              </nav>
+
+            </div>
+          </header>
+
+          {/* HERO BANNER */}
+          <div className="bg-gradient-to-r from-[#0B192C] via-[#1E3E62] to-[#0B192C] border-b border-slate-800 py-6 px-4">
+            <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-bold text-white mb-1">
+                  LTK: Services for Local & Global Growth
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-300">
+                  Empowering Kacheri with Cutting-Edge Software, Infrastructure & Digital Media.
+                </p>
+              </div>
+              <div className="flex items-center space-x-4 bg-slate-900/60 backdrop-blur px-4 py-2 rounded-xl border border-amber-500/30">
+                <div className="text-right">
+                  <span className="text-[10px] text-slate-400 block uppercase font-bold tracking-wider">Direct Hotline / WhatsApp</span>
+                  <span className="text-sm font-extrabold text-amber-400">+256 700 000 000</span>
+                </div>
+                <div className="w-10 h-10 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center">
+                  <i data-lucide="phone-call" class="w-5 h-5"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* MAIN CONTAINER */}
+          <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            
+            {/* ================= 1. BOOKING TAB ================= */}
+            {activeTab === 'book' && (
+              <div>
+                {bookingSuccess ? (
+                  /* Confirmation Modal / Card */
+                  <div className="max-w-2xl mx-auto bg-[#162436] border border-amber-500/40 rounded-3xl p-8 shadow-2xl text-center backdrop-blur-md">
+                    <div className="w-20 h-20 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/40">
+                      <i data-lucide="check-circle-2" class="w-12 h-12"></i>
+                    </div>
+                    <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-2">
+                      Booking Reserved Successfully!
+                    </h2>
+                    <p className="text-slate-300 text-sm mb-6">
+                      Thank you <strong className="text-amber-400">{bookingSuccess.customer.name}</strong>. Your request has been assigned to our Kacheri technical team.
+                    </p>
+
+                    <div className="bg-[#0B192C] rounded-2xl p-6 text-left border border-slate-700/80 mb-6 space-y-3">
+                      <div className="flex justify-between items-center pb-3 border-b border-slate-800">
+                        <span className="text-xs text-slate-400 uppercase font-bold">Ref Number</span>
+                        <span className="font-mono text-amber-400 font-bold">{bookingSuccess.id}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-slate-400">Selected Service</span>
+                        <span className="text-sm font-semibold text-slate-100">{bookingSuccess.service.name}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-slate-400">Category</span>
+                        <span className="text-xs px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                          {bookingSuccess.service.category}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-slate-400">Scheduled Time</span>
+                        <span className="text-sm font-medium text-slate-200">{bookingSuccess.date} at {bookingSuccess.time}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-slate-400">Meeting Format</span>
+                        <span className="text-sm text-amber-300 font-medium">{bookingSuccess.meetingType}</span>
+                      </div>
+                      <div className="flex justify-between items-center pt-2 border-t border-slate-800">
+                        <span className="text-xs text-slate-400">Estimated Cost</span>
+                        <span className="text-base font-extrabold text-emerald-400">
+                          UGX {bookingSuccess.service.price.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                      <button
+                        onClick={() => setBookingSuccess(null)}
+                        className="px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm transition"
+                      >
+                        Book Another Service
+                      </button>
+                      <button
+                        onClick={() => setActiveTab('dashboard')}
+                        className="px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-sm transition shadow-lg shadow-amber-500/20"
+                      >
+                        View Dashboard
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* Form Grid */
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    
+                    {/* Left Column - Steps */}
+                    <div className="lg:col-span-8 space-y-8">
+                      
+                      {/* Step 1: Category Filter & Service Selection */}
+                      <section className="bg-[#162436] border border-slate-800 rounded-3xl p-6 shadow-xl">
+                        <div className="flex items-center justify-between mb-6">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm border border-amber-500/30">
+                              1
+                            </div>
+                            <h3 className="text-lg font-bold text-white">Select LTK Service</h3>
+                          </div>
+                        </div>
+
+                        {/* Category Selector Tabs (Matches Image 1) */}
+                        <div className="flex flex-wrap gap-2 mb-6 border-b border-slate-800 pb-4">
+                          {[
+                            { id: 'All', label: 'All Services' },
+                            { id: 'Software Solutions', label: 'Software Solutions' },
+                            { id: 'IT & Infrastructure', label: 'IT & Infrastructure' },
+                            { id: 'Creative Media', label: 'Creative & Career Media' }
+                          ].map(cat => (
+                            <button
+                              key={cat.id}
+                              onClick={() => setCategoryFilter(cat.id)}
+                              className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all ${
+                                categoryFilter === cat.id
+                                  ? 'bg-amber-500 text-slate-950 font-bold shadow-md'
+                                  : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                              }`}
+                            >
+                              {cat.label}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Services Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {filteredServices.map(srv => {
+                            const isSelected = selectedService.id === srv.id;
+                            return (
+                              <div
+                                key={srv.id}
+                                onClick={() => setSelectedService(srv)}
+                                className={`cursor-pointer p-5 rounded-2xl border transition-all flex flex-col justify-between relative ${
+                                  isSelected
+                                    ? 'bg-[#1E3E62]/40 border-amber-500 shadow-xl shadow-amber-500/10'
+                                    : 'bg-[#0B192C] border-slate-800 hover:border-slate-600'
+                                }`}
+                              >
+                                {srv.popular && (
+                                  <span className="absolute top-3 right-3 text-[9px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                                    Popular
+                                  </span>
+                                )}
+
+                                <div>
+                                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${
+                                    isSelected ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-amber-400'
+                                  }`}>
+                                    <i data-lucide={srv.iconName} class="w-5 h-5"></i>
+                                  </div>
+                                  <h4 className="font-bold text-white text-base mb-1">{srv.name}</h4>
+                                  <p className="text-xs text-slate-400 leading-relaxed mb-4">{srv.description}</p>
+                                </div>
+
+                                <div className="flex items-center justify-between border-t border-slate-800/80 pt-3 mt-auto">
+                                  <span className="text-[11px] text-slate-400 font-medium">{srv.duration}</span>
+                                  <span className="text-sm font-extrabold text-amber-400">
+                                    UGX {srv.price.toLocaleString()}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </section>
+
+                      {/* Step 2: Date, Time & Meeting Type */}
+                      <section className="bg-[#162436] border border-slate-800 rounded-3xl p-6 shadow-xl">
+                        <div className="flex items-center space-x-3 mb-6">
+                          <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm border border-amber-500/30">
+                            2
+                          </div>
+                          <h3 className="text-lg font-bold text-white">Schedule & Format</h3>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {/* Date */}
+                          <div>
+                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                              Preferred Date
+                            </label>
+                            <input
+                              type="date"
+                              min={new Date().toISOString().split('T')[0]}
+                              value={selectedDate}
+                              onChange={(e) => setSelectedDate(e.target.value)}
+                              className="w-full bg-[#0B192C] border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500"
+                            />
+                          </div>
+
+                          {/* Meeting Type */}
+                          <div>
+                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                              Consultation Location / Mode
+                            </label>
+                            <select
+                              value={meetingType}
+                              onChange={(e) => setMeetingType(e.target.value)}
+                              className="w-full bg-[#0B192C] border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500"
+                            >
+                              <option value="On-site Kacheri Office">On-site Consultation (Kacheri Branch)</option>
+                              <option value="Client Site Visit">Client Location Visit (Kacheri & Surroundings)</option>
+                              <option value="Virtual Online Call">Virtual Online Consultation (Google Meet/WhatsApp)</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Time Slots */}
+                        <div className="mt-6">
+                          <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                            Select Time Slot
+                          </label>
+                          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                            {TIME_SLOTS.map((slot) => (
+                              <button
+                                key={slot}
+                                type="button"
+                                onClick={() => setSelectedTime(slot)}
+                                className={`py-2.5 px-2 rounded-xl text-xs font-bold transition-all border ${
+                                  selectedTime === slot
+                                    ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md'
+                                    : 'bg-[#0B192C] text-slate-300 border-slate-800 hover:border-slate-600'
+                                }`}
+                              >
+                                {slot}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </section>
+
+                      {/* Step 3: Contact Details */}
+                      <section className="bg-[#162436] border border-slate-800 rounded-3xl p-6 shadow-xl">
+                        <div className="flex items-center space-x-3 mb-6">
+                          <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm border border-amber-500/30">
+                            3
+                          </div>
+                          <h3 className="text-lg font-bold text-white">Client Information</h3>
+                        </div>
+
+                        <form onSubmit={handleFormSubmit} className="space-y-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-xs text-slate-400 mb-1">Full Name *</label>
+                              <input
+                                type="text"
+                                required
+                                name="name"
+                                value={formData.name}
+                                onChange={handleInputChange}
+                                placeholder="e.g. John Okello"
+                                className="w-full bg-[#0B192C] border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-xs text-slate-400 mb-1">Phone / WhatsApp Number *</label>
+                              <input
+                                type="tel"
+                                required
+                                name="phone"
+                                value={formData.phone}
+                                onChange={handleInputChange}
+                                placeholder="+256 700 000 000"
+                                className="w-full bg-[#0B192C] border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-xs text-slate-400 mb-1">Email Address (Optional)</label>
+                              <input
+                                type="email"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleInputChange}
+                                placeholder="name@company.com"
+                                className="w-full bg-[#0B192C] border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-xs text-slate-400 mb-1">Specific Area / Village in Kacheri</label>
+                              <input
+                                type="text"
+                                name="location"
+                                value={formData.location}
+                                onChange={handleInputChange}
+                                placeholder="e.g. Kacheri Center / Sub-county"
+                                className="w-full bg-[#0B192C] border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500"
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-xs text-slate-400 mb-1">Project Brief / Requirement Details</label>
+                            <textarea
+                              rows="3"
+                              name="notes"
+                              value={formData.notes}
+                              onChange={handleInputChange}
+                              placeholder="Briefly describe what you need (e.g., website specifications, network layout, photography requirement...)"
+                              className="w-full bg-[#0B192C] border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500 resize-none"
+                            ></textarea>
+                          </div>
+                        </form>
+                      </section>
+
+                    </div>
+
+                    {/* Right Column - Live Summary */}
+                    <div className="lg:col-span-4">
+                      <div className="bg-[#162436] border border-amber-500/30 rounded-3xl p-6 shadow-2xl sticky top-28 backdrop-blur-md">
+                        <div className="flex items-center space-x-3 pb-4 mb-4 border-b border-slate-800">
+                          <LTKLogo className="w-10 h-10" />
+                          <div>
+                            <h4 className="font-extrabold text-white text-base">Booking Summary</h4>
+                            <span className="text-[10px] text-amber-400 font-semibold tracking-wider uppercase">LTK Kacheri Branch</span>
+                          </div>
+                        </div>
+
+                        <div className="space-y-4 mb-6">
+                          <div>
+                            <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">Service</span>
+                            <span className="font-bold text-white text-sm">{selectedService.name}</span>
+                            <span className="text-[11px] block text-slate-400">{selectedService.category}</span>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div className="bg-[#0B192C] p-2.5 rounded-xl border border-slate-800">
+                              <span className="text-[10px] text-slate-400 uppercase block font-bold">Date</span>
+                              <span className="font-semibold text-slate-200">{selectedDate}</span>
+                            </div>
+                            <div className="bg-[#0B192C] p-2.5 rounded-xl border border-slate-800">
+                              <span className="text-[10px] text-slate-400 uppercase block font-bold">Time Slot</span>
+                              <span className="font-semibold text-slate-200">{selectedTime}</span>
+                            </div>
+                          </div>
+
+                          <div className="bg-[#0B192C] p-2.5 rounded-xl border border-slate-800 text-xs">
+                            <span className="text-[10px] text-slate-400 uppercase block font-bold">Meeting Mode</span>
+                            <span className="font-semibold text-slate-200">{meetingType}</span>
+                          </div>
+
+                          <div className="pt-3 border-t border-slate-800 flex items-center justify-between">
+                            <div>
+                              <span className="text-[11px] text-slate-400 uppercase font-bold block">Estimated Fee</span>
+                              <span className="text-[10px] text-slate-500">Payable upon service agreement</span>
+                            </div>
+                            <span className="text-xl font-extrabold text-amber-400">
+                              UGX {selectedService.price.toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={handleFormSubmit}
+                          disabled={isSubmitting}
+                          className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-extrabold py-4 rounded-xl shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center space-x-2 disabled:opacity-50"
+                        >
+                          {isSubmitting ? (
+                            <span>Confirming...</span>
+                          ) : (
+                            <>
+                              <span>Submit & Reserve Booking</span>
+                              <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                            </>
+                          )}
+                        </button>
+
+                        <p className="text-[10px] text-slate-400 text-center mt-4 leading-relaxed">
+                          ⚡ Instant registration. LTK Kacheri engineers will contact you to verify details.
+                        </p>
+                      </div>
+                    </div>
+
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ================= 2. DASHBOARD / MANAGEMENT TAB ================= */}
+            {activeTab === 'dashboard' && (
+              <div className="space-y-6">
+                
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-[#162436] p-6 rounded-3xl border border-slate-800 shadow-xl">
+                  <div>
+                    <h3 className="text-xl font-extrabold text-white">Booking Management</h3>
+                    <p className="text-xs text-slate-400">Track and manage upcoming appointments for Lucas Technologies Kacheri.</p>
+                  </div>
+
+                  <div className="relative w-full sm:w-64">
+                    <input
+                      type="text"
+                      placeholder="Search customer or ID..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full bg-[#0B192C] border border-slate-700 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+                </div>
+
+                {filteredBookings.length === 0 ? (
+                  <div className="bg-[#162436] border border-slate-800 rounded-3xl p-12 text-center">
+                    <i data-lucide="calendar-x" class="w-12 h-12 text-slate-600 mx-auto mb-3"></i>
+                    <h4 className="text-base font-semibold text-slate-300">No Bookings Found</h4>
+                    <p className="text-xs text-slate-500 mt-1 mb-4">No appointments matching your query.</p>
+                    <button
+                      onClick={() => setActiveTab('book')}
+                      className="px-4 py-2 bg-amber-500 text-slate-950 font-bold rounded-xl text-xs"
+                    >
+                      Book a Service Now
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredBookings.map((b) => (
+                      <div
+                        key={b.id}
+                        className="bg-[#162436] border border-slate-800 hover:border-slate-700 rounded-3xl p-5 shadow-lg flex flex-col justify-between"
+                      >
+                        <div>
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="font-mono text-xs font-bold text-amber-400 bg-amber-950/40 px-2.5 py-1 rounded-md border border-amber-800/40">
+                              {b.id}
+                            </span>
+                            <span className={`text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full ${
+                              b.status === 'Confirmed'
+                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                                : 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
+                            }`}>
+                              {b.status}
+                            </span>
+                          </div>
+
+                          <h4 className="font-bold text-white text-base mb-1">{b.service.name}</h4>
+                          <p className="text-xs text-amber-300 font-semibold mb-3">{b.service.category}</p>
+
+                          <div className="space-y-2 text-xs bg-[#0B192C] p-3 rounded-2xl border border-slate-800/80 mb-4">
+                            <div className="flex justify-between">
+                              <span className="text-slate-400">Client:</span>
+                              <span className="text-slate-200 font-semibold">{b.customer.name}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-slate-400">Phone:</span>
+                              <span className="text-slate-200">{b.customer.phone}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-slate-400">Date/Time:</span>
+                              <span className="text-slate-200 font-medium">{b.date} @ {b.time}</span>
+                            </div>
+                            <div className="flex justify-between pt-2 border-t border-slate-800">
+                              <span className="text-slate-400">Quote:</span>
+                              <span className="text-emerald-400 font-extrabold">UGX {b.service.price.toLocaleString()}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 border-t border-slate-800 pt-3">
+                          <button
+                            onClick={() => setSelectedBookingModal(b)}
+                            className="flex-1 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-white transition"
+                          >
+                            Full Details
+                          </button>
+
+                          {b.status === 'Confirmed' && (
+                            <button
+                              onClick={() => handleCancelBooking(b.id)}
+                              className="px-3 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-xs font-semibold border border-amber-500/30 transition"
+                            >
+                              Cancel
+                            </button>
+                          )}
+
+                          <button
+                            onClick={() => handleDeleteBooking(b.id)}
+                            className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 transition"
+                          >
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+              </div>
+            )}
+
+            {/* ================= 3. CONTACT & LOCATION TAB ================= */}
+            {activeTab === 'contact' && (
+              <div className="max-w-4xl mx-auto space-y-8">
+                <div className="bg-[#162436] border border-slate-800 rounded-3xl p-8 shadow-2xl">
+                  <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6 pb-6 border-b border-slate-800 mb-6">
+                    <LTKLogo className="w-24 h-24" />
+                    <div className="text-center sm:text-left">
+                      <h3 className="text-2xl font-extrabold text-white">Lucas Technologies Kacheri (LTK)</h3>
+                      <p className="text-sm text-amber-400 font-semibold mt-1">
+                        Local & Global Growth Technology Hub
+                      </p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Serving Kacheri, Kotido District & Karamoja Region, Uganda
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="bg-[#0B192C] p-5 rounded-2xl border border-slate-800 text-center">
+                      <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-3">
+                        <i data-lucide="map-pin" class="w-5 h-5"></i>
+                      </div>
+                      <h4 className="font-bold text-white text-sm mb-1">Physical Location</h4>
+                      <p className="text-xs text-slate-400">
+                        Main Trading Center, Kacheri Sub-County, Kotido District, Uganda
+                      </p>
+                    </div>
+
+                    <div className="bg-[#0B192C] p-5 rounded-2xl border border-slate-800 text-center">
+                      <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-3">
+                        <i data-lucide="phone" class="w-5 h-5"></i>
+                      </div>
+                      <h4 className="font-bold text-white text-sm mb-1">Phone & WhatsApp</h4>
+                      <p className="text-xs text-slate-400">+256 700 000 000</p>
+                      <p className="text-xs text-slate-400">+256 780 000 000</p>
+                    </div>
+
+                    <div className="bg-[#0B192C] p-5 rounded-2xl border border-slate-800 text-center">
+                      <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-3">
+                        <i data-lucide="mail" class="w-5 h-5"></i>
+                      </div>
+                      <h4 className="font-bold text-white text-sm mb-1">Email Support</h4>
+                      <p className="text-xs text-slate-400">support@lucastech-kacheri.com</p>
+                      <p className="text-xs text-slate-400">info@lucastech-kacheri.com</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+          </main>
+
+          {/* BOOKING MODAL */}
+          {selectedBookingModal && (
+            <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-[#162436] border border-slate-700 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative">
+                <button
+                  onClick={() => setSelectedBookingModal(null)}
+                  className="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-xl bg-slate-800"
+                >
+                  <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+
+                <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <span>Booking Specification</span>
+                  <span className="text-xs font-mono text-amber-400 bg-amber-950 px-2 py-0.5 rounded border border-amber-800">
+                    {selectedBookingModal.id}
+                  </span>
+                </h4>
+
+                <div className="space-y-3 text-sm text-slate-300">
+                  <div className="p-4 bg-[#0B192C] rounded-2xl space-y-2 border border-slate-800">
+                    <div className="flex justify-between">
+                      <span className="text-xs text-slate-400">Service:</span>
+                      <span className="font-semibold text-white">{selectedBookingModal.service.name}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-xs text-slate-400">Category:</span>
+                      <span className="text-amber-400 text-xs">{selectedBookingModal.service.category}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-xs text-slate-400">Est. Price:</span>
+                      <span className="font-bold text-emerald-400">UGX {selectedBookingModal.service.price.toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-[#0B192C] rounded-2xl space-y-2 border border-slate-800 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Client Name:</span>
+                      <span className="text-white font-medium">{selectedBookingModal.customer.name}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Phone/WhatsApp:</span>
+                      <span className="text-white">{selectedBookingModal.customer.phone}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Mode:</span>
+                      <span className="text-amber-300">{selectedBookingModal.meetingType}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Location:</span>
+                      <span className="text-white">{selectedBookingModal.customer.location}</span>
+                    </div>
+                  </div>
+
+                  {selectedBookingModal.customer.notes && (
+                    <div className="p-3 bg-[#0B192C] rounded-2xl border border-slate-800">
+                      <span className="text-[10px] text-slate-400 uppercase font-bold block mb-1">Notes / Requirements:</span>
+                      <p className="text-slate-300 text-xs italic">{selectedBookingModal.customer.notes}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-6 flex justify-end">
+                  <button
+                    onClick={() => setSelectedBookingModal(null)}
+                    className="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-xl"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* FOOTER */}
+          <footer className="border-t border-slate-800/80 bg-[#0B192C] py-6 text-center text-xs text-slate-500">
+            <p>© {new Date().getFullYear()} Lucas Technologies Kacheri (LTK). Services for Local & Global Growth.</p>
+          </footer>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

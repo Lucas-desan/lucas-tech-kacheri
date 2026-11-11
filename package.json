@@ -1,0 +1,17 @@
+{
+  "name": "lucas-tech-kacheri",
+  "version": "1.0.0",
+  "description": "Lucas Technologies Kacheri (LTK) Booking and Services Application",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "LTK",
+    "Kacheri",
+    "Lucas Technologies",
+    "Booking"
+  ],
+  "author": "Lucas",
+  "license": "ISC"
+}
