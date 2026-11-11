@@ -82,56 +82,13 @@
   <script type="text/babel">
     const { useState } = React;
 
-    // --- LTK EMBLEM LOGO COMPONENT ---
+    // --- LTK BUSINESS LOGO COMPONENT ---
     const LTKLogo = ({ className = "w-12 h-12" }) => (
-      <svg viewBox="0 0 400 400" className={className} xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <radialGradient id="blueGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#1E3E62" />
-            <stop offset="100%" stopColor="#0B192C" />
-          </radialGradient>
-          <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#FDE68A" />
-            <stop offset="50%" stopColor="#E5A93B" />
-            <stop offset="100%" stopColor="#92400E" />
-          </linearGradient>
-        </defs>
-
-        {/* Outer Gold Ring */}
-        <circle cx="200" cy="200" r="190" fill="none" stroke="url(#goldGradient)" strokeWidth="16" />
-        <circle cx="200" cy="200" r="178" fill="#F8FAFC" />
-        <circle cx="200" cy="200" r="132" fill="none" stroke="url(#goldGradient)" strokeWidth="6" />
-
-        {/* Inner Blue Circle */}
-        <circle cx="200" cy="200" r="126" fill="url(#blueGlow)" />
-
-        {/* Outer Curved Text (Lucas Technologies Kacheri) */}
-        <path id="textPathTop" d="M 50 200 A 150 150 0 0 1 350 200" fill="none" />
-        <text fontFamily="'Plus Jakarta Sans', sans-serif" fontSize="25" fontWeight="800" fill="#0F172A" textAnchor="middle">
-          <textPath href="#textPathTop" startOffset="50%">
-            Lucas Technologies Kacheri
-          </textPath>
-        </text>
-
-        {/* Bottom Text (LTK) */}
-        <text x="200" y="340" fontFamily="'Plus Jakarta Sans', sans-serif" fontSize="42" fontWeight="900" fill="#0F172A" textAnchor="middle" letterSpacing="4">
-          LTK
-        </text>
-
-        {/* Dots */}
-        <circle cx="65" cy="210" r="10" fill="#0F172A" />
-        <circle cx="335" cy="210" r="10" fill="#0F172A" />
-
-        {/* Central Business Logo Icon */}
-        <g transform="translate(200, 200)">
-          <path d="M -44 -10 C -44 -18 -38 -24 -30 -24 H 30 C 38 -24 44 -18 44 -10 V 24 C 44 34 36 42 26 42 H -26 C -36 42 -44 34 -44 24 Z" fill="url(#goldGradient)" opacity="0.95" />
-          <path d="M -30 -8 H 30 C 34 -8 38 -4 38 -1 V 22 C 38 26 34 30 30 30 H -30 C -34 30 -38 26 -38 22 V -1 C -38 -4 -34 -8 -30 -8 Z" fill="#0B192C" />
-          <path d="M -28 -28 A 12 12 0 0 1 28 -28" stroke="url(#goldGradient)" strokeWidth="8" fill="none" strokeLinecap="round"/>
-          <path d="M -20 -8 V 18 M 20 -8 V 18 M -6 4 H 6" stroke="#F8FAFC" strokeWidth="5" strokeLinecap="round" />
-          <path d="M -8 -4 L -8 -18 H 8 V -4" fill="none" stroke="#F8FAFC" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M -25 24 L -10 24 L -10 30 L 10 30 L 10 24 L 25 24" fill="none" stroke="#F8FAFC" strokeWidth="5" strokeLinejoin="round"/>
-        </g>
-      </svg>
+      <img
+        src="/logo.jpeg"
+        alt="Lucas Technologies Kacheri business logo"
+        className={`${className} object-contain`}
+      />
     );
 
     // --- SERVICE CATALOG DATA (BASED ON IMAGE 1) ---
